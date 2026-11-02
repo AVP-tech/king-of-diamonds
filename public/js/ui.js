@@ -8,7 +8,7 @@
   const t = function () { return K.t.apply(null, arguments); };
   const SKEY = 'kod-settings-v1', PKEY = 'kod-profile-v1', RKEY = 'kod-record-v1';
 
-  K.settings = { lang: 'en', voice: true, music: true, sfx: true, diff: 'normal', hp: 6, timer: 40, size: 5, violence: 'ruthless' };
+  K.settings = { lang: 'en', voice: true, music: true, sfx: true, diff: 'normal', hp: 6, timer: 40, size: 5, violence: 'ruthless', theme: 'auto' };
   K.profile = { name: '', avatar: Pre.defaultAvatar() };
   K.record = { played: 0, won: 0 };
   try { Object.assign(K.settings, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
@@ -35,6 +35,18 @@
     });
   }
 
+  /* ---------- light / dark theme ---------- */
+  const lightQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  function effectiveTheme() { const m = K.settings.theme || 'auto'; return m === 'auto' ? (lightQuery && lightQuery.matches ? 'light' : 'dark') : m; }
+  function applyTheme() {
+    const th = effectiveTheme();
+    document.documentElement.setAttribute('data-theme', th);
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', th === 'light' ? '#F6F2EA' : '#07090D');
+    const b = $('#mTheme'); if (b) { b.setAttribute('aria-pressed', String(th === 'light')); b.setAttribute('aria-label', t('themeBtn')); b.title = t('themeBtn'); }
+  }
+  if (lightQuery && lightQuery.addEventListener) lightQuery.addEventListener('change', function () { if ((K.settings.theme || 'auto') === 'auto') applyTheme(); });
+  const badName = function (n) { n = String(n || '').trim(); return n.length < 2 || /^player$/i.test(n); };
+
   /* ---------- navigation with a diamond wipe ---------- */
   const UI = {
     cur: null, from: null, soloBots: null,
@@ -53,6 +65,7 @@
           if (K.Sfx.ctx && !(K.Game.active())) K.Music.set('menu');
         }
         if (self['render_' + name]) self['render_' + name]();
+        if (K.Social) K.Social.syncChat();
         const f = $('#scr-' + name).querySelector('.back, .mi, input');
         if (f && name !== 'game' && !opts.noFocus) { try { f.focus({ preventScroll: true }); } catch (e) {} }
       };
@@ -64,6 +77,8 @@
     },
     back: function () {
       if (this.cur === 'queue') { this.leaveQueue(); return; }
+      if (this.cur === 'friends' && K.Social.open) { K.Social.closeDm(); return; }
+      if (this.cur === 'profile') this.afterName = null;
       if (this.from === 'game') { this.from = null; this.go('game', { instant: true }); this.openPause(); return; }
       this.go('menu');
     },
@@ -92,17 +107,30 @@
       }).catch(function () { clearTimeout(to); el.hidden = true; });
     },
 
+    /* ---------- name gate: nobody sits at a table as "Player" ---------- */
+    afterName: null,
+    requireName: function (then) {
+      if (!badName(K.profile.name)) { then(); return; }
+      this.afterName = then;
+      this.go('profile');
+    },
+    render_friends: function () { K.Social.show(); },
+
     /* ---------- quick match ---------- */
     quick: false,
     quickMatch: function () {
       const self = this;
       if (!K.Net.available()) { toast(t('qOffline')); return; }
+      if (badName(K.profile.name)) { this.requireName(function () { self.quickMatch(); }); return; }
       this.connect().then(function () { return K.Net.call('quick:join'); }).then(function (r) {
         if (!r || !r.ok) { toast(t('qOffline')); return; }
-        self.quick = true; self.qStart = Date.now(); self.qOfferAt = 0; self.qKept = 0; self.qSeen = {}; self.qN = 0;
-        if (self.cur !== 'queue') self.go('queue');
-        else self.render_queue();
+        self.enterQueue();
       }).catch(function () { toast(t('qOffline')); });
+    },
+    enterQueue: function () {
+      this.quick = true; this.qStart = Date.now(); this.qOfferAt = 0; this.qKept = 0; this.qSeen = {}; this.qN = 0;
+      K.Net.keepAwake(true);
+      if (this.cur !== 'queue') this.go('queue'); else this.render_queue();
     },
     leaveQueue: function () {
       clearInterval(this.qIv); this.qIv = null;
@@ -120,7 +148,7 @@
         const m = humans[i], ang = i / need * Math.PI * 2 - Math.PI / 2;
         const pos = 'left:' + (50 + Math.cos(ang) * 41).toFixed(1) + '%;top:' + (50 + Math.sin(ang) * 41).toFixed(1) + '%';
         const fresh = m && !self.qSeen[m.id]; if (m) self.qSeen[m.id] = 1;
-        seats += m ? '<div class="q-seat in' + (fresh ? ' new' : '') + (m.id === K.Net.me ? ' me' : '') + '" style="' + pos + ';--c:' + K.accentOf(m.avatar) + '"><div class="q-av">' + K.avatarHead(m.avatar) + '</div><b>' + (m.id === K.Net.me ? t('you') : m.name) + '</b></div>'
+        seats += m ? '<div class="q-seat in' + (fresh ? ' new' : '') + (m.id === K.Net.me ? ' me' : '') + '" data-id="' + m.id + '" style="' + pos + ';--c:' + K.accentOf(m.avatar) + '"><div class="q-av">' + K.avatarHead(m.avatar) + '</div><b>' + (m.id === K.Net.me ? t('you') : m.name) + '</b></div>'
                    : '<div class="q-seat" style="' + pos + '"><div class="q-av"><i>?</i></div><b>' + t('qWaiting') + '</b></div>';
       }
       $('#qSeats').innerHTML = seats;
@@ -157,6 +185,7 @@
       seg($('#segTime'), [20, 30, 40, 60].map(function (n) { return { v: n, label: n + t('sec') }; }), S.timer, function (v) { S.timer = Number(v); saveS(); self.render_solo(); });
     },
     startSolo: function () {
+      if (badName(K.profile.name)) { const self0 = this; this.requireName(function () { self0.startSolo(); }); return; }
       const size = K.settings.size || 5;
       const bots = this.soloBots && this.soloBots.length === size - 1 ? this.soloBots : Pre.pickBots(size - 1, [K.profile.name]);
       this.soloBots = null;
@@ -191,6 +220,8 @@
       this.draft = JSON.parse(JSON.stringify(K.profile.avatar));
       $('#profName').value = K.profile.name;
       $('#profName').placeholder = t('namePh');
+      $('#profGate').hidden = !this.afterName;
+      if (this.afterName) { $('#profName').value = badName(K.profile.name) ? '' : K.profile.name; try { $('#profName').focus({ preventScroll: true }); } catch (e) {} }
       this.drawProfile(false);
       this.renderPresets();
       this.renderCustom();
@@ -307,7 +338,8 @@
         row('music', onoff, S.music ? '1' : '0', function (v) { S.music = v === '1'; K.Sfx.ensure(); K.Sfx.sync(); if (S.music && !K.Music.mode && self.cur !== 'game') K.Music.set('menu'); }),
         row('sfx', onoff, S.sfx ? '1' : '0', function (v) { S.sfx = v === '1'; K.Sfx.ensure(); K.Sfx.sync(); }),
         row('violence', [{ v: 'ruthless', label: t('ruthless') }, { v: 'clean', label: t('noBlood') }], S.violence || 'ruthless', function (v) { S.violence = v; }),
-        row('voiceChat', onoff, S.voiceChat === false ? '0' : '1', function (v) { S.voiceChat = v === '1'; K.VC.setHear(S.voiceChat); })
+        row('voiceChat', onoff, S.voiceChat === false ? '0' : '1', function (v) { S.voiceChat = v === '1'; K.VC.setHear(S.voiceChat); }),
+        row('theme', [{ v: 'auto', label: t('themeAuto') }, { v: 'dark', label: t('themeDark') }, { v: 'light', label: t('themeLight') }], S.theme || 'auto', function (v) { S.theme = v; applyTheme(); })
       ];
       $('#setRows').innerHTML = rows.map(function (r) { return '<div class="opt"><span class="lbl">' + t(r.key) + '</span><div class="seg" id="set-' + r.key + '"></div></div>'; }).join('');
       rows.forEach(function (r) { seg($('#set-' + r.key), r.items, r.cur, function (v) { r.fn(v); saveS(); syncTools(); self.render_settings(); }); });
@@ -326,27 +358,31 @@
     },
     createRoom: function () {
       const self = this;
+      if (badName(K.profile.name)) { this.requireName(function () { self.createRoom(); }); return; }
       this.quick = false;
       this.connect().then(function () { return K.Net.call('room:create'); }).then(function (r) {
-        if (r && r.ok) self.go('lobby'); else toast(t('errOffline'));
+        if (r && r.ok) { K.Net.keepAwake(true); self.go('lobby'); } else toast(t('errOffline'));
       }).catch(function () {});
     },
     joinRoom: function (code) {
       const self = this;
-      this.quick = false;
       code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (badName(K.profile.name)) { this.requireName(function () { self.go('join'); $('#joinCode').value = code; self.joinRoom(code); }); return; }
+      this.quick = false;
       const err = $('#joinErr');
       err.hidden = true;
       if (code.length !== 5) { err.textContent = t('errNotFound'); err.hidden = false; return; }
       this.connect().then(function () { return K.Net.call('room:join', { code: code }); }).then(function (r) {
-        if (r && r.ok) { self.go('lobby'); return; }
-        err.textContent = r && r.err === 'started' ? t('errStarted') : r && r.err === 'full' ? t('errFull') : t('errNotFound');
+        if (r && r.ok) { K.Net.keepAwake(true); if (self.cur !== 'lobby') self.go('lobby'); return; }
+        err.textContent = r && r.err === 'started' ? t('errStarted') : r && r.err === 'full' ? t('errFull') : r && r.err === 'ip' ? t('ipTaken') : t('errNotFound');
         err.hidden = false;
+        if (self.cur !== 'join') self.go('join');
       }).catch(function () { err.textContent = t('errOffline'); err.hidden = false; });
     },
     render_lobby: function () {
       const st = K.Net.room; if (!st) return;
       const me = K.Net.me, host = st.hostId === me, self = this;
+      if (K.Social) K.Social.syncChat();
       $('#lobbyCode').textContent = st.code;
       let html = '';
       for (let i = 0; i < 8; i++) {
@@ -357,7 +393,7 @@
         }
         const c = K.accentOf(m.avatar);
         html += '<div class="seat' + (m.id === me ? ' me' : '') + '" data-id="' + m.id + '" style="--c:' + c + '"><div class="rv-av">' + K.avatarBust(m.avatar, 'smile') + '</div><b>' + m.name + '</b>' +
-          (m.id === st.hostId ? '<span class="tag host">' + t('host') + '</span>' : m.bot ? '<span class="tag">' + t('bot') + '</span>' : m.id === me ? '<span class="tag you">' + t('you') + '</span>' : '<span class="tag">' + t('player') + '</span>') +
+          (m.away ? '<span class="tag">…</span>' : m.id === st.hostId ? '<span class="tag host">' + t('host') + '</span>' : m.bot ? '<span class="tag">' + t('bot') + '</span>' : m.id === me ? '<span class="tag you">' + t('you') + '</span>' : '<span class="tag">' + t('player') + '</span>') +
           (host && m.id !== me ? '<button type="button" class="x" data-id="' + m.id + '" aria-label="' + t('remove') + ' ' + m.name + '">×</button>' : '') + '</div>';
       }
       $('#lobbySeats').innerHTML = html;
@@ -367,13 +403,18 @@
       $('#lobbyOpts').innerHTML = '<div class="opt"><span class="lbl">' + t('length') + '</span><div class="seg" id="lbLen"></div></div>' +
         '<div class="opt"><span class="lbl">' + t('timer') + '</span><div class="seg" id="lbTime"></div></div>' +
         '<div class="opt"><span class="lbl">' + t('fillBots') + '</span><div class="seg" id="lbFill"></div></div>' +
-        '<div class="opt"><span class="lbl">' + t('tableSize') + '</span><div class="seg" id="lbSize"></div></div>';
+        '<div class="opt"><span class="lbl">' + t('tableSize') + '</span><div class="seg" id="lbSize"></div></div>' +
+        '<div class="opt"><span class="lbl">' + t('oneIp') + '</span><div class="seg" id="lbIp"></div></div>';
       const send = function (patch) { if (host) K.Net.send('room:settings', Object.assign({}, s, patch)); };
       seg($('#lbLen'), [{ v: 4, label: t('quick') + '<i>4</i>' }, { v: 6, label: t('standard') + '<i>6</i>' }, { v: 10, label: t('long') + '<i>10</i>' }], s.hp, function (v) { send({ hp: Number(v) }); });
       seg($('#lbTime'), [20, 30, 40, 60].map(function (n) { return { v: n, label: n + t('sec') }; }), s.timer, function (v) { send({ timer: Number(v) }); });
-      seg($('#lbSize'), [5, 6, 7, 8].map(function (n) { return { v: n, label: (n === 5 ? t('classic') + ' ' : '') + n }; }), s.size || 5, function (v) { send({ size: Number(v) }); });
+      seg($('#lbSize'), [3, 4, 5, 6, 7, 8].map(function (n) { return { v: n, label: (n === 5 ? t('classic') + ' ' : '') + n }; }), s.size || 5, function (v) { send({ size: Number(v) }); });
+      seg($('#lbIp'), [{ v: '0', label: t('off') }, { v: '1', label: t('on') }], s.oneIp ? '1' : '0', function (v) { send({ oneIp: v === '1' }); });
       seg($('#lbFill'), [{ v: '1', label: t('on') }, { v: '0', label: t('off') }], s.fill ? '1' : '0', function (v) { send({ fill: v === '1' }); });
       $$('#lobbyOpts button').forEach(function (b) { b.disabled = !host; });
+      const nh = st.members.filter(function (m) { return !m.bot; }).length;
+      $('#lobbyStart').textContent = s.fill ? t('startFilled', Math.max(s.size || 5, st.members.length)) : t('startNoBots', st.members.length);
+      $('#lobbyNote').textContent = (host ? '' : '') + t('humansHere', nh) + '. ' + (s.fill ? t('botsNote') : t('noBotsNote'));
       $('#lobbyStart').hidden = !host;
       $('#lobbyWait').hidden = host;
       $('#lobbyErr').hidden = true;
@@ -439,6 +480,9 @@
     document.documentElement.lang = K.lang;
     $$('[data-t]').forEach(function (el) { const v = t(el.dataset.t); if (typeof v === 'string') el.textContent = v; });
     $('#mLang').textContent = K.lang === 'hi' ? 'हिं' : 'EN';
+    document.querySelectorAll('[data-ph]').forEach(function (el) { el.setAttribute('placeholder', t(el.dataset.ph)); });
+    if (K.Social) K.Social.labels();
+    applyTheme();
     if (UI.cur && UI.cur !== 'game' && UI['render_' + UI.cur]) UI['render_' + UI.cur]();
   }
   function syncTools() {
@@ -447,9 +491,19 @@
     $('#gSfx').setAttribute('aria-pressed', String(K.settings.sfx));
   }
 
+  /* the page was reloaded or discarded in the background a moment ago: go back to the seat if it is still held */
+  UI.restore = function () {
+    let at = 0; try { at = Number(localStorage.getItem('kod.live') || 0); } catch (e) {}
+    if (!at || Date.now() - at > 240000 || !K.Net.available()) return;
+    K.Net.connect().catch(function () {});
+  };
+
   UI.init = function () {
     const self = this;
     applyLang(); syncTools();
+    K.Social.init(); K.Social.bind();
+    $('#mTheme').addEventListener('click', function () { K.Sfx.play('click'); K.settings.theme = effectiveTheme() === 'light' ? 'dark' : 'light'; saveS(); applyTheme(); });
+    $('#supCopy').addEventListener('click', function () { const b = this; try { navigator.clipboard.writeText('aayushpandey.pro@gmail.com').then(function () { b.textContent = t('supportCopied'); setTimeout(function () { b.textContent = t('supportCopy'); }, 1800); }); } catch (e) { toast('aayushpandey.pro@gmail.com'); } });
     // first interaction unlocks audio
     const unlock = function () {
       K.Sfx.ensure(); K.Sfx.sync();
@@ -465,11 +519,12 @@
         const go = b.dataset.go;
         if (go === 'create') self.createRoom();
         else if (go === 'quick') self.quickMatch();
+        else if (go === 'solo' || go === 'join') self.requireName(function () { self.go(go); });
         else self.go(go);
       });
     });
     $$('[data-land]').forEach(function (b) {
-      b.addEventListener('click', function () { K.Sfx.ensure(); K.Sfx.play('click'); if (b.dataset.land === 'quick') self.quickMatch(); else self.go(b.dataset.land); });
+      b.addEventListener('click', function () { K.Sfx.ensure(); K.Sfx.play('click'); if (b.dataset.land === 'quick') self.quickMatch(); else if (b.dataset.land === 'solo') self.requireName(function () { self.go('solo'); }); else self.go(b.dataset.land); });
     });
     $('.scroll-cue').addEventListener('click', function (e) { e.preventDefault(); const tg = $('#land-how'); if (tg) tg.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     $$('[data-back]').forEach(function (b) { b.addEventListener('click', function () { K.Sfx.play('back'); if (self.reading) { self.readStop = true; K.Voice.stop(); K.Ann.stop(); } self.back(); }); });
@@ -488,7 +543,13 @@
     $('#profName').addEventListener('input', function () { K.profile.name = Pre.cleanName($('#profName').value); saveP(); });
     $('#profName').addEventListener('change', function () { self.commit(); });
     $('#profRand').addEventListener('click', function () { K.Sfx.play('shine'); self.draft = Pre.randomAvatar(); self.commit(); self.renderCustom(); self.renderPresets(); });
-    $('#profSave').addEventListener('click', function () { self.commit(); K.Sfx.play('win'); toast(t('saved')); self.back(); });
+    $('#profSave').addEventListener('click', function () {
+      self.commit();
+      if (self.afterName && badName(K.profile.name)) { toast(t('nameTooShort')); $('#profGate').hidden = false; try { $('#profName').focus(); } catch (e) {} return; }
+      K.Sfx.play('win'); toast(t('saved'));
+      const next = self.afterName; self.afterName = null;
+      if (next) next(); else self.back();
+    });
 
     $$('#rbLang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.v); }); });
     $('#rbAll').addEventListener('click', function () { self.read(null); });
@@ -506,6 +567,8 @@
 
     K.Net.on('room', function (st) {
       K.VC.sync(st);
+      K.Social.syncChat();
+      try { localStorage.setItem('kod.live', String(Date.now())); } catch (e) {}
       if (st && st.public) { if (self.cur === 'queue') self.render_queue(); return; }
       if (self.cur === 'lobby') self.render_lobby();
     });
@@ -516,10 +579,51 @@
     });
     $('#qKeep').addEventListener('click', function () { K.Sfx.play('click'); self.qKept = Date.now() + 20000; self.qTick(); });
     K.Net.on('kicked', function () { K.VC.closeAll(); toast(t('kicked')); K.Game.stop(); $('#ovEnd').hidden = true; self.go('menu'); });
-    K.Net.on('disconnect', function () {
-      if (self.cur === 'lobby' || self.cur === 'queue' || (self.cur === 'game' && K.Game.mode() === 'online')) {
-        toast(t('disconnected')); K.Game.stop(true); $('#ovEnd').hidden = true; $('#ovPause').hidden = true; self.go('menu');
+    /* connection lost (phone locked, Chrome in the background, weak signal): keep the screen as it is, show a banner and
+       reconnect. The server holds the seat and a bot plays it meanwhile; on return the game catches the player up. */
+    const online = function () { return self.cur === 'lobby' || self.cur === 'queue' || (self.cur === 'game' && K.Game.mode() === 'online'); };
+    let giveUp = null;
+    const banner = function (on) { const b = $('#netBanner'); b.textContent = on ? t('reconnecting') : ''; b.hidden = !on; };
+    K.Net.on('disconnect', function (why) {
+      if (!online() || K.Net.replaced) return;
+      banner(true);
+      clearTimeout(giveUp);
+      giveUp = setTimeout(function () {                   // the seat is gone after a few minutes anyway
+        if (K.Net.socket && K.Net.socket.connected) return;
+        banner(false); toast(t('seatLost')); K.VC.closeAll(); K.Game.stop(true); K.Net.leave(); $('#ovEnd').hidden = true; $('#ovPause').hidden = true; self.go('menu');
+      }, 200000);
+    });
+    K.Net.on('reconnect', function () { clearTimeout(giveUp); K.VC.reset(); });
+    K.Net.on('replaced', function () {
+      banner(false); toast(t('replaced')); K.VC.closeAll(); K.Game.stop(true); $('#ovEnd').hidden = true; $('#ovPause').hidden = true; K.Net.keepAwake(false); self.go('menu');
+    });
+    /* the server tells us where we are after every (re)connect */
+    K.Net.on('session', function (d) {
+      clearTimeout(giveUp); banner(false);
+      const inGame = self.cur === 'game' && K.Game.mode() === 'online';
+      if (!d.room) {
+        if (online() && $('#ovEnd').hidden) {
+          if (d.lost) toast(t('seatLost'));
+          K.VC.closeAll(); K.Game.stop(true); $('#ovEnd').hidden = true; $('#ovPause').hidden = true; K.Net.keepAwake(false); self.quick = false; self.go('menu');
+        }
+        return;
       }
+      K.Net.keepAwake(true);
+      if (d.inMatch) {
+        if (!inGame) {                                    // the page was reloaded or discarded: rebuild the table
+          $('#ovEnd').hidden = true; self.lastMode = 'online'; self.quick = !!d.room.public;
+          $('#gMic').hidden = !K.VC.supported();
+          self.go('game', { instant: true }); K.Game.begin(self.onlineSession());
+        }
+        K.Social.syncChat();
+        K.VC.sync(d.room);
+        return;
+      }
+      if (inGame) { K.Game.stop(true); $('#ovEnd').hidden = true; }
+      if (d.room.public) { if (self.cur !== 'queue') { self.go('queue', { instant: true }); self.quick = true; self.qStart = Date.now(); self.qOfferAt = 0; self.qKept = 0; self.qSeen = {}; self.qN = 0; } else self.render_queue(); }
+      else if (self.cur !== 'lobby') self.go('lobby', { instant: true });
+      else self.render_lobby();
+      K.VC.sync(d.room);
     });
     K.Net.on('game', function (ev) {
       if (ev.type === 'start') {
@@ -529,6 +633,7 @@
         self.go('game');
         K.Music.set('game');
         K.Game.begin(self.onlineSession());
+        K.Social.syncChat();
       }
       K.Game.event(ev.type, ev.data);
     });
@@ -555,6 +660,11 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const ft = document.activeElement && document.activeElement.tagName;
+      if (ft === 'INPUT' || ft === 'TEXTAREA') {          // typing in chat or a form never moves the game
+        if (e.key === 'Escape' && K.Social.chatOpen) K.Social.toggleChat(false);
+        return;
+      }
       if (!$('#ovRule').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); K.Game.ruleContinue(); } return; }
       if (!$('#ovPause').hidden) { if (e.key === 'Escape') self.closePause(); return; }
       if (!$('#ovEnd').hidden) return;

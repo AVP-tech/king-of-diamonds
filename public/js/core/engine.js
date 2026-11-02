@@ -118,7 +118,8 @@
       const w = this.get(last.winners[0]);
       if (w && w.alive) this.crownId = w.id;
     }
-    alive.forEach(function (p) { if (p.bot) self.scheduleBot(p, n); });
+    alive.forEach(function (p) { if (p.bot) self.scheduleBot(p, n, p.away ? p.id : null); });
+    this.pickEnd = this.time + this.timerMs;
     this.after(this.timerMs, 'pick', function () { self.timeout(); });
     this.emit('round', { round: this.round, alive: alive.map(function (p) { return p.id; }), rules: this.rules, crown: this.crownId, timeMs: this.timerMs });
   };
@@ -129,7 +130,7 @@
     if (this.difficulty === 'hard' && last && r() < 0.5) return R.clamp100(Math.abs(R.bestResponse(last.avg * 0.82, n) + (r() - 0.5) * 3));
     return v;
   };
-  P.scheduleBot = function (p, n) {
+  P.scheduleBot = function (p, n, owner) {
     const self = this, alive = this.alive();
     const opp = alive.filter(function (q) { return q.id !== p.id; })[0];
     let v = R.botPick({ type: p.type }, { n: n, history: this.history, oppId: opp ? opp.id : null, rules: this.rules }, this.rng);
@@ -137,6 +138,7 @@
     const w = LOCK_WINDOW[p.type] || [0.1, 0.5];
     const at = Math.min(this.timerMs * (w[0] + this.rng() * (w[1] - w[0])), this.timerMs - 1500);
     this.after(Math.max(300, at), 'pick', function () { self.lock(p.id, v); });
+    if (owner) this.queue[this.queue.length - 1].owner = owner;
   };
   P.submit = function (id, v) {
     if (this.state !== 'pick') return false;
@@ -204,13 +206,52 @@
     this.destroy();
   };
 
-  /* a human left: a bot takes over the seat */
+  /* a human left for good: a bot takes over the seat */
   P.disconnect = function (id) {
     const p = this.get(id);
     if (!p || p.bot) return;
     p.connected = false; p.bot = true; p.type = 'analyst';
     this.emit('player', { id: id, connected: false, bot: true });
-    if (this.state === 'pick' && p.alive && this.picks[id] === undefined) this.scheduleBot(p, this.alive().length);    this.checkReady();
+    if (this.state === 'pick' && p.alive && this.picks[id] === undefined) this.scheduleBot(p, this.alive().length);
+    this.checkReady();
+  };
+  /* connection dropped (phone in the background): a stand-in bot plays the seat until the player is back */
+  P.away = function (id) {
+    const p = this.get(id);
+    if (!p || p.bot) return;
+    p.away = true; p.connected = false; p.bot = true; p.wasHuman = true; p.type = 'analyst';
+    this.emit('player', { id: id, connected: false, bot: true, away: true });
+    if (this.state === 'pick' && p.alive && this.picks[id] === undefined) this.scheduleBot(p, this.alive().length, id);
+    this.checkReady();
+  };
+  /* the player came back */
+  P.reclaim = function (id) {
+    const p = this.get(id);
+    if (!p) return false;
+    if (!p.away) return !p.bot;
+    p.away = false; p.wasHuman = false; p.bot = false; p.connected = true;
+    this.queue = this.queue.filter(function (q) { return q.owner !== id; });
+    this.emit('player', { id: id, connected: true, bot: false });
+    return true;
+  };
+  /* the seat was held too long: the stand-in stays for good */
+  P.abandon = function (id) {
+    const p = this.get(id);
+    if (!p || !p.away) return false;
+    p.away = false; p.wasHuman = false;
+    return true;
+  };
+  /* everything a returning player needs to rejoin mid-match */
+  P.snapshot = function (id) {
+    const self = this, last = this.history[this.history.length - 1] || null;
+    return {
+      players: this.pub(), hp: this.hp, timer: this.timerMs / 1000, round: this.round, state: this.state,
+      alive: this.alive().map(function (p) { return p.id; }), rules: this.rules, crown: this.crownId,
+      remainMs: this.state === 'pick' ? Math.max(0, this.pickEnd - this.time) : 0,
+      locked: Object.keys(this.picks), mine: this.picks[id],
+      last: last ? { avg: last.avg, target: last.target, winners: last.winners } : null,
+      over: this.state === 'over'
+    };
   };
 
   return { Match: Match, BOT_TYPES: BOT_TYPES };

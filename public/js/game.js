@@ -674,6 +674,58 @@
     K.UI.showEnd({ winner: d.winner, standings: d.standings, rounds: d.rounds, me: G.me, stats: G.stats, mode: G.s.mode });
   }
 
+
+  /* the connection dropped for a while (phone in the background) and came back: rebuild the table as it is now */
+  async function onResync(d, ok) {
+    G.players = {};
+    d.players.forEach(function (p) { G.players[p.id] = Object.assign({}, p, { wasBot: p.bot && !p.connected ? false : p.bot, outShown: !p.alive }); });
+    G.hpMax = d.hp; G.timer = d.timer; G.round = d.round; G.history = []; G.last = null;
+    G.stats = G.stats || { won: 0, close: null };
+    G.alive = d.alive.slice(); G.start = d.players.length; G.crown = d.crown || null;
+    G.locked = {}; (d.locked || []).forEach(function (id) { G.locked[id] = true; });
+    G.myPick = d.mine == null ? null : d.mine; G.entry = '';
+    const gs = $('#scr-game'), me = P(G.me);
+    gs.classList.remove('dark', 'lowered', 'killed', 'exec', 'cine', 'cine-grey', 'cine-out', 'dead');
+    $('#ovRule').hidden = true; $('#banner').innerHTML = ''; $('#formula').classList.remove('show'); $('#beams').innerHTML = '';
+    glass(false); $('#sight').className = ''; $('#flash').classList.remove('hold', 'white', 'go');
+    if (!me) return;
+    gs.style.setProperty('--hand', K.skinOf(me.avatar));
+    gs.style.setProperty('--sleeve', K.outfitOf(me.avatar));
+    gs.style.setProperty('--cuff', K.accentOf(me.avatar));
+    Scene().build(others().map(function (id) { return P(id); }), P(G.me));
+    others().forEach(function (id) {
+      const p = P(id);
+      if (!p.alive) Scene().killQuiet(id);
+      else { Scene().spot(id, 'on'); Scene().expr(id, 'neutral'); }
+      placard(id, null, true);
+    });
+    Scene().crown(G.crown);
+    updateHead();
+    K.Music.set('game');
+    if (!me.alive) { gs.classList.add('dead'); Scene().killQuiet(G.me); Scene().reviveCam(); }
+    if (d.state === 'pick') {
+      G.phase = 'pick';
+      monitorPick();
+      Object.keys(G.locked).forEach(function (id) {
+        const lk = lkEl(id); if (lk) lk.classList.add('on');
+        if (id !== G.me && P(id) && P(id).alive) Scene().led(id, 'lock');
+      });
+      aliveOthers().forEach(function (id) { if (!G.locked[id]) { Scene().led(id, 'think'); Scene().expr(id, 'think'); } });
+      if (!me.alive) renderPad('spectate');
+      else if (G.myPick != null) renderPad('wait');
+      else renderPad('pick');
+      startCountdown(d.remainMs * speed());
+    } else {
+      // between rounds: show the table and tell the server we are ready for the next step
+      G.phase = 'result';
+      monitorEmblem();
+      renderPad(me.alive ? 'waitPlayers' : 'spectate');
+      await sleep(400); if (!ok()) return;
+      G.s.send('ready');
+    }
+    banner('sweep', '', t('reconnected'), 1500);
+  }
+
   function onPlayer(d) {
     const p = P(d.id); if (!p) return;
     p.connected = d.connected; p.bot = d.bot; p.type = p.type || 'analyst';
@@ -689,9 +741,10 @@
       this.ambient();
     },
     event: function (type, data) {
+      if (type === 'resync') { G.token++; stopCountdown(); if (G.nextResolve) G.nextResolve(); if (G.ruleResolve) G.ruleResolve(); K.Voice.stop(); G.q = Promise.resolve(); }
       const tok = G.token, ok = live(tok), at = performance.now();
       if (type === 'locked') { G.q = G.q.then(function () { if (ok()) onLocked(data); }); return; }
-      const h = { start: onStart, round: onRound, autopick: onAutopick, reveal: onReveal, over: onOver, player: onPlayer }[type];
+      const h = { start: onStart, round: onRound, autopick: onAutopick, reveal: onReveal, over: onOver, player: onPlayer, resync: onResync }[type];
       if (!h) return;
       G.q = G.q.then(function () { if (ok()) return h(data, ok, at); }).catch(function (e) { console.error(e); });
     },
@@ -722,6 +775,12 @@
       return false;
     },
     skip: skipLine,
+    /* chat and emotes shown above a player's head at the table */
+    say: function (id, text) {
+      if (!G.s || !K.Scene.has(id)) return false;
+      K.Scene.bubble(id, text); return true;
+    },
+    hasPlayer: function (id) { return !!G.s && !!G.players[id]; },
     ruleContinue: function () { if (G.ruleResolve) G.ruleResolve(); },
     ambient: function () {
       clearInterval(G.idleIv);

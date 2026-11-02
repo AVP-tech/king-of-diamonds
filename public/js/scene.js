@@ -860,6 +860,15 @@
         await pause(400);
       })();
     },
+    /* a seat that was already empty when we joined or came back: no animation */
+    killQuiet: function (id) {
+      const c = this.ch(id); if (!c || c.dead) return;
+      c.dead = true; c.setFace({ dead: true, blood: false, expr: 'shock' }); c.setLed(null);
+      c.headP.rotation.x = 0.55; c.headP.rotation.z = 0.35; c.torso.rotation.x = 0.62;
+      c.tablet.rotation.x = -1.45; c.tablet.position.y = c.handY - 0.02;
+      const grey = new T.Color(0x555555);
+      c.mats.forEach(function (m) { if (m.color && !m.map) m.color.lerp(grey, 0.45).multiplyScalar(0.55); else if (m.color) m.color.multiplyScalar(0.5); });
+    },
     kill: function (c, gore, toCenter) {
       c.dead = true;
       c.setFace({ dead: true, blood: !!gore, expr: 'shock' });

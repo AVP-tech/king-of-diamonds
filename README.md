@@ -1,13 +1,20 @@
 # King of Diamonds
 
-A 3D round-table survival number game for 5 to 8 players, playable in the browser. Every round, each player secretly picks a whole number from 0 to 100. The average is multiplied by 0.8, and the closest pick wins the round. Everyone else loses a diamond. At 0 diamonds you are eliminated and a new rule enters the game. The last player standing wins.
+A 3D round-table survival number game for 3 to 8 players, playable in the browser. Every round, each player secretly picks a whole number from 0 to 100. The average is multiplied by 0.8, and the closest pick wins the round. Everyone else loses a diamond. At 0 diamonds you are eliminated and a new rule enters the game. The last player standing wins.
 
 ## What's inside
 
 - **Landing page**: a live 3D card room plays a round by itself behind the menu, followed by How it works, the rules, features, a FAQ and a footer with About, Privacy and Terms pages (AdSense requires a privacy policy).
 - **Quick match**: real players from anywhere are seated at a public table. It starts as soon as 5 players are there. After 15 seconds of waiting, anyone at the table can tap **Start with bots** and bots take the empty seats.
 - **Play vs bots**: offline practice against bots at a 5, 6, 7 or 8 seat table, with difficulty, match length and timer options.
-- **Rooms**: create a room, share the 5-letter code or link, choose the table size, fill seats with bots and play with friends.
+- **Rooms**: create a room, share the 5-letter code or link and play with friends. Turn **Fill empty seats with bots** off to play with only the real people in the room (2 to 8 players, so 3 friends can play alone). The host button says exactly what will happen, for example "Start with 3 players (no bots)".
+- **Friends**: every player has a 7-character friend code and an invite link. Add a friend, accept requests, see who is online, invite them to your room and send private messages. The list is kept in the browser; pending requests live on the game server until it restarts.
+- **Chat and emotes**: a chat button in the lobby, queue and match. Messages appear above the speaker's head at the table, with 10 emotes (laugh, wow, cool, hmm, clap, angry, dead, salute, nervous, love).
+- **Stays connected**: if a phone locks or Chrome goes to the background, your seat is held for a few minutes and a bot plays it for you. When you come back the match catches you up. The screen stays awake while you wait or play, and a reloaded tab returns to the same seat.
+- **One entry per player**: a private room allows one seat per device. Quick match seats one player per network, so the same connection cannot fill a public table. Duplicate names at a table get a number.
+- **Name prompt**: the default name "Player" sends you to the name screen before you can start, join or create a game.
+- **Light and dark theme**: Auto, Dark or Light, in Settings and on the top bar. The 3D table stays dark.
+- **Support**: a Support section on the landing page and a `support.html` page with the contact email.
 - **3D card room** (Three.js): wooden round table, hanging lamps, shadows, characters who react, think, smirk and panic.
 - **Free look**: drag with the mouse or a finger to turn your head. A / D and W / S (or the arrow keys) also work. Double-tap, press C or use the target button to look ahead again.
 - **Your elimination, seen from outside**: the red dot crawls onto you, then the camera cuts across the table to show your own character in your chair. The turret drops, the laser locks on, and the shot plays in slow motion. Then the camera rises over the table in black and white as the others react. Tap to skip. The **No blood** setting removes the blood.
@@ -83,7 +90,7 @@ Add your domain in Vercel (Project → Settings → Domains). The game server ca
 ### Ads (AdSense)
 
 1. Put the site on your own domain first. AdSense approves domains, not `vercel.app` addresses.
-2. Replace `hello@example.com` in `public/about.html`, `public/privacy.html` and `public/terms.html` and in the landing page footer (`public/index.html`, `id="footMail"`) with your real contact email.
+2. The contact email is `aayushpandey.pro@gmail.com` in the landing page, the footer and the About, Privacy, Terms and Support pages. To change it, search for that address in `public/`.
 3. Apply at [adsense.google.com](https://adsense.google.com). Google gives you a script tag for the `<head>` of `public/index.html` and an `ads.txt` file, which goes in `public/`.
 4. Good ad spots: between the landing page sections, below the FAQ, and on the end-of-match screen. Don't put ads on the table during a round.
 5. For visitors in Europe and the UK, turn on Google's consent message (AdSense → Privacy & messaging).
@@ -91,7 +98,25 @@ Add your domain in Vercel (Project → Settings → Domains). The game server ca
 ## Voice chat notes
 
 - Browsers allow the microphone only on **https** pages or on **localhost**. Vercel and Render both give you https.
-- Voice chat is peer-to-peer and uses Google's free STUN servers. Some strict office or college networks block that; adding a TURN server (for example a free Metered TURN account) fixes it.
+- Voice chat is peer-to-peer (WebRTC). Laptops on Wi-Fi usually connect with just STUN. **Phones on mobile data sit behind carrier NAT and need a TURN relay**, or the voice will not connect. The server hands the browsers its ICE list at `/ice`. Out of the box it adds a free public test relay, which is best-effort only. For reliable voice on phones add your own TURN account:
+  1. Make a free account at [metered.ca](https://www.metered.ca) (the free plan includes a relay allowance), and create an app.
+  2. In Render, open the game server, then **Environment**, and add `METERED_DOMAIN` (for example `yourapp.metered.live`) and `METERED_API_KEY`. The server fetches fresh credentials from them.
+  3. Or, with any other TURN provider, set `TURN_URLS` (comma separated, for example `turn:host:3478,turns:host:443?transport=tcp`), `TURN_USERNAME` and `TURN_CREDENTIAL`.
+- Open the game in Chrome or Safari. In-app browsers (Instagram, WhatsApp) do not give microphone access.
+
+## Server settings (Render environment variables)
+
+| Variable | What it does | Default |
+|---|---|---|
+| `SERVER_URL` (Vercel) | Address of the Render server | none |
+| `BOT_OFFER_MS` | Quick match wait before "Start with bots" shows | 15000 |
+| `GRACE_MS` | How long a seat is held for someone who dropped mid-match | 180000 |
+| `GRACE_LOBBY_MS`, `GRACE_QUEUE_MS` | Same for a room lobby and the Quick match queue | 60000, 25000 |
+| `METERED_DOMAIN`, `METERED_API_KEY` | TURN relay for voice on phones | none |
+| `TURN_URLS`, `TURN_USERNAME`, `TURN_CREDENTIAL` | Your own TURN server instead | none |
+| `ALLOW_SAME_IP` | Set to `1` to turn off the one-player-per-network rule at Quick match | off |
+
+Players share one network in hostels, offices and on mobile carriers. If friends on the same Wi-Fi cannot find each other at Quick match, they can play in a private room, which only limits one seat per device.
 
 ## Credits
 
@@ -107,6 +132,7 @@ public/index.html         Landing page and all game screens
 public/about.html         About page
 public/privacy.html       Privacy policy (needed for AdSense)
 public/terms.html         Terms of use
+public/support.html       Support page
 public/config.js          Address of the game server (written by the Vercel build)
 public/css/style.css      All styles and animations
 public/js/core/rules.js   Game rules (shared by browser and server)
@@ -117,6 +143,7 @@ public/js/game.js         In-game flow and effects
 public/js/ui.js           Landing, menus, Quick match, avatar creator, rulebook, settings, rooms
 public/js/net.js          Connection to the game server
 public/js/voicechat.js    Online voice chat (WebRTC)
+public/js/social.js       Chat panel, emotes, friends, invites, private messages
 public/js/announcer.js    Recorded announcer playback
 public/js/avatar.js       Cartoon avatar drawing
 public/js/audio.js        Sound effects, music, voice host

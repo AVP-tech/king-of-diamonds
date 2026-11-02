@@ -4,39 +4,72 @@
   'use strict';
   const K = window.KOD = window.KOD || {};
   const $ = function (s) { return document.querySelector(s); };
-  const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
+  const FALLBACK = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
 
   const VC = {
-    peers: {}, stream: null, track: null, on: false, levels: {},
+    peers: {}, stream: null, track: null, on: false, levels: {}, ice: null, retry: {},
     supported: function () { return !!(window.RTCPeerConnection && navigator.mediaDevices && navigator.mediaDevices.getUserMedia); },
     init: function () {
       const self = this;
       K.Net.on('rtc', function (d) { self.onSignal(d); });
       K.Net.on('rtcTalk', function (d) { if (d && d.id) self.mark(d.id, d.on); });
       setInterval(function () { self.meter(); }, 120);
+      // phones: a browser only plays sound after a tap, and the connection can drop when the app is in the background
+      const unlock = function () { self.unlock(); };
+      document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);
+      document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { self.unlock(); self.heal(); } });
+      setInterval(function () { self.heal(); }, 5000);
       this.syncUI();
+    },
+    /* make sure every remote voice is actually playing */
+    unlock: function () {
+      try { const c = K.Sfx && K.Sfx.ctx; if (c && c.state === 'suspended') c.resume(); } catch (e) {}
+      Object.keys(this.peers).forEach(function (id) {
+        const el = VC.peers[id].el;
+        if (el && el.paused) { const pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+      });
+    },
+    /* a peer that failed or never connected is dropped, then sync() builds it again */
+    heal: function () {
+      const now = Date.now(), self = this;
+      Object.keys(this.peers).forEach(function (id) {
+        const p = self.peers[id], st = p.pc.connectionState;
+        if (st === 'failed' || st === 'closed' || (st !== 'connected' && now - p.born > 20000)) self.close(id);
+      });
+      if (K.Net.room) this.sync(K.Net.room);
+    },
+    reset: function () { const self = this; Object.keys(this.peers).forEach(function (id) { self.close(id); }); },
+    loadIce: function () {
+      const self = this;
+      if (this.ice) return Promise.resolve(this.ice);
+      if (!this._iceP) this._iceP = K.Net.iceServers().then(function (l) { self.ice = { iceServers: l }; return self.ice; });
+      return this._iceP;
     },
     /* keep one connection to every other human in the room */
     sync: function (st) {
       if (!this.supported() || !K.Net.me) return;
+      if (!this.ice) { const self0 = this; this.loadIce().then(function () { self0.sync(K.Net.room); }); return; }
       const me = K.Net.me, self = this;
       const ids = st ? st.members.filter(function (m) { return !m.bot && m.id !== me; }).map(function (m) { return m.id; }) : [];
       Object.keys(this.peers).forEach(function (id) { if (ids.indexOf(id) < 0) self.close(id); });
       ids.forEach(function (id) { if (!self.peers[id] && me < id) self.connect(id); });
     },
     make: function (id) {
-      const self = this, pc = new RTCPeerConnection(ICE), p = { pc: pc, pending: [], el: null, tr: null };
+      const self = this, pc = new RTCPeerConnection(this.ice || { iceServers: FALLBACK }), p = { pc: pc, pending: [], el: null, tr: null, born: Date.now() };
       this.peers[id] = p;
       pc.onicecandidate = function (e) { if (e.candidate) K.Net.send('rtc:signal', { to: id, data: { ice: e.candidate } }); };
       pc.ontrack = function (e) {
         const stream = e.streams[0] || new MediaStream([e.track]);
-        if (!p.el) { p.el = document.createElement('audio'); p.el.autoplay = true; p.el.setAttribute('playsinline', ''); $('#remoteAudio').appendChild(p.el); }
+        if (!p.el) { p.el = document.createElement('audio'); p.el.autoplay = true; p.el.setAttribute('playsinline', ''); p.el.setAttribute('webkit-playsinline', ''); $('#remoteAudio').appendChild(p.el); }
         p.el.srcObject = stream;
         p.el.muted = K.settings.voiceChat === false;
         const pr = p.el.play && p.el.play(); if (pr && pr.catch) pr.catch(function () {});
         self.analyse(id, stream);
       };
-      pc.onconnectionstatechange = function () { if (pc.connectionState === 'failed') self.close(id); };
+      pc.onconnectionstatechange = function () {
+        if (pc.connectionState === 'failed') self.close(id);
+        else if (pc.connectionState === 'disconnected') setTimeout(function () { if (self.peers[id] === p && pc.connectionState !== 'connected') self.close(id); }, 6000);
+      };
       return p;
     },
     connect: async function (id) {
@@ -82,6 +115,7 @@
       if (on) {
         if (!this.supported()) { K.toast(K.t('micUnsupported')); return false; }
         if (!window.isSecureContext) { K.toast(K.t('micInsecure')); return false; }
+        if (/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|; wv\)/i.test(navigator.userAgent)) { K.toast(K.t('micInApp')); }
         try {
           if (!this.stream) {
             this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
@@ -89,10 +123,11 @@
             this.analyse('me', this.stream);
           }
           this.track.enabled = true;
+          this.unlock();
           const tr = this.track;
           Object.keys(this.peers).forEach(function (id) { const p = VC.peers[id]; if (p.tr) p.tr.sender.replaceTrack(tr); });
           this.on = true;
-        } catch (e) { K.toast(K.t('micDenied')); this.on = false; }
+        } catch (e) { K.toast(K.t(e && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError') ? 'micNone' : 'micDenied')); this.on = false; }
       } else {
         if (this.track) this.track.enabled = false;
         this.on = false;

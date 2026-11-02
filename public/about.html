@@ -2,34 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>(function(){try{var s=JSON.parse(localStorage.getItem("kod-settings-v1")||"{}"),m=s.theme||"auto";var l=m==="light"||(m==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.setAttribute("data-theme",l?"light":"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>About · King of Diamonds</title>
-<meta name="description" content="About King of Diamonds, a free online survival number game for 5 to 8 players.">
+<meta name="description" content="About King of Diamonds, a free online survival number game for 3 to 8 players.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 L28 16 L16 30 L4 16Z' fill='%23E8344E'/%3E%3Cpath d='M16 9 L22 16 L16 23 L10 16Z' fill='%23FFC54A'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Hanken+Grotesk:wght@400;600;700&display=swap">
 <style>
-:root { color-scheme: dark; --bg: #07090D; --ink: #EEF1F6; --muted: #9AA3B5; --line: #242C3B; --red: #E8344E; --gold: #FFC54A; }
+:root { color-scheme: dark; --bg: #07090D; --bg2: #2a120c; --ink: #EEF1F6; --body: #C6CEDC; --muted: #9AA3B5; --line: #242C3B; --red: #E8344E; --gold: #FFC54A; --link: #FFC54A; --card: #0E131C; }
+:root[data-theme="light"] { color-scheme: light; --bg: #F6F2EA; --bg2: #FFFFFF; --ink: #181B24; --body: #3A4252; --muted: #5C6578; --line: #DDD5C6; --red: #C41F38; --gold: #8A5B00; --link: #8A5B00; --card: #FFFFFF; }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(ellipse at 50% -10%, #2a120c, var(--bg) 55%) fixed; color: var(--ink); font: 16px/1.65 'Hanken Grotesk', system-ui, sans-serif; }
+body { margin: 0; background: radial-gradient(ellipse at 50% -10%, var(--bg2), var(--bg) 55%) fixed; color: var(--ink); font: 16px/1.65 'Hanken Grotesk', system-ui, sans-serif; }
 main { width: min(100% - 32px, 760px); margin: 0 auto; padding: 28px 0 60px; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 44px; }
 .brand { font: 900 16px 'Cinzel', serif; letter-spacing: .1em; color: var(--ink); text-decoration: none; }
 .brand::before { content: "\2666"; color: var(--red); margin-right: 8px; }
-.play { padding: 10px 18px; border-radius: 12px; background: var(--gold); color: #2A1A00; font-weight: 700; text-decoration: none; }
+.top-r { display: flex; gap: 10px; align-items: center; }
+.th { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; display: grid; place-items: center; }
+.th svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.th .l { display: none; } :root[data-theme="light"] .th .l { display: block; } :root[data-theme="light"] .th .d { display: none; }
+.play { padding: 10px 18px; border-radius: 12px; background: #FFC54A; color: #2A1A00; font-weight: 700; text-decoration: none; }
 h1 { font: 900 clamp(32px, 6vw, 52px)/1.1 'Cinzel', serif; margin: 0 0 8px; }
 .upd { color: var(--muted); margin: 0 0 30px; font-size: 14px; }
 h2 { font-size: 20px; margin: 34px 0 8px; color: var(--gold); }
-p, li { color: #C6CEDC; } a { color: var(--gold); }
+p, li { color: var(--body); } a { color: var(--link); }
 footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; }
 footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--gold); }
+.cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 18px; }
+.cards div { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 4px 18px 14px; }
+.cards h2 { font-size: 17px; margin: 14px 0 6px; }
+.cards p { margin: 0; font-size: 15px; }
+.mail { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 6px; align-items: center; }
+.mail a.btn, .mail button { padding: 12px 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 700 15px 'Hanken Grotesk', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.mail a.btn { background: #FFC54A; border-color: #FFC54A; color: #2A1A00; }
+.addr { font-family: ui-monospace, Menlo, monospace; color: var(--muted); font-size: 15px; word-break: break-all; }
 </style>
+<script>
+function kodTheme(){var r=document.documentElement,n=r.getAttribute("data-theme")==="light"?"dark":"light";r.setAttribute("data-theme",n);try{var s=JSON.parse(localStorage.getItem("kod-settings-v1")||"{}");s.theme=n;localStorage.setItem("kod-settings-v1",JSON.stringify(s));}catch(e){}}
+</script>
 </head>
 <body>
 <main>
-<div class="top"><a class="brand" href="./">King of Diamonds</a><a class="play" href="./">Play now</a></div>
+<div class="top"><a class="brand" href="./">King of Diamonds</a><div class="top-r"><button type="button" class="th" onclick="kodTheme()" aria-label="Switch light or dark theme" title="Light / dark"><svg class="d" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="l" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button><a class="play" href="./">Play now</a></div></div>
 <h1>About the game</h1>
 <p class="upd">A round table, one number each, and one survivor.</p>
-<p>King of Diamonds is a free browser game for 5 to 8 players. Every round, each player secretly picks a whole number from 0 to 100. The average of all picks is multiplied by 0.8, and the player closest to that target wins the round. Everyone else loses a diamond. Lose all your diamonds and you are out. Every time a player is eliminated, a new rule enters the game.</p>
+<p>King of Diamonds is a free browser game for 3 to 8 players. Every round, each player secretly picks a whole number from 0 to 100. The average of all picks is multiplied by 0.8, and the player closest to that target wins the round. Everyone else loses a diamond. Lose all your diamonds and you are out. Every time a player is eliminated, a new rule enters the game.</p>
 <h2>Ways to play</h2>
 <ul>
 <li><b>Quick match</b> seats you with real players online. If the table is slow to fill, you can start with bots in the empty seats.</li>
@@ -39,8 +56,8 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 <h2>Where the idea comes from</h2>
 <p>The game is inspired by the King of Diamonds number game from fiction. The characters, art, voice lines and the extra rules for bigger tables are original to this game. It is a fan-inspired project and is not affiliated with, endorsed by or connected to any series, publisher or studio.</p>
 <h2 id="contact">Contact</h2>
-<p>Questions, bug reports or feedback: <a href="mailto:hello@example.com" id="mail">hello@example.com</a>.</p>
-<footer><a href="./">Play</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></footer>
+<p>Questions, bug reports or feedback: <a href="mailto:aayushpandey.pro@gmail.com" id="mail">aayushpandey.pro@gmail.com</a>.</p>
+<footer><a href="./">Play</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></footer>
 </main>
 </body>
 </html>

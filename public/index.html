@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>King of Diamonds · Free online survival number game</title>
-<meta name="description" content="Pick a number from 0 to 100. Closest to 80% of the average survives. A free 3D multiplayer game for 5 to 8 players with voice chat, a live announcer and rules that change as players fall.">
+<meta name="description" content="Pick a number from 0 to 100. Closest to 80% of the average survives. A free 3D multiplayer game for 3 to 8 players with voice chat, a live announcer and rules that change as players fall.">
 <meta property="og:title" content="King of Diamonds">
 <meta property="og:description" content="One round table. One number each. Closest to 80% of the average survives. Free, in your browser.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#07090D">
+<script>(function(){try{var s=JSON.parse(localStorage.getItem("kod-settings-v1")||"{}"),m=s.theme||"auto";var l=m==="light"||(m==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.setAttribute("data-theme",l?"light":"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 L28 16 L16 30 L4 16Z' fill='%23E8344E'/%3E%3Cpath d='M16 9 L22 16 L16 23 L10 16Z' fill='%23FFC54A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +30,7 @@
       <button type="button" class="me-chip" id="meChip"><span class="me-av" id="meAv"></span><span class="me-txt"><b id="meName"></b><small data-t="edit"></small></span></button>
       <div class="tools">
         <button type="button" class="ib lang" id="mLang" aria-label="Language">EN</button>
+        <button type="button" class="ib" id="mTheme" aria-label="Theme" title="Theme"><svg class="th-dark" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="th-light" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button>
         <button type="button" class="ib" id="mMusic" aria-pressed="true" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path class="off-only" d="M3 3l18 18"/></svg></button>
       </div>
       </header>
@@ -45,6 +47,7 @@
           <button type="button" class="mi" data-go="create"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="mi-t"><b data-t="createRoom"></b><small data-t="createRoomSub"></small></span></button>
           <button type="button" class="mi" data-go="join"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M14 4h5v16h-5M10 8l4 4-4 4M14 12H4"/></svg></span><span class="mi-t"><b data-t="joinRoom"></b><small data-t="joinRoomSub"></small></span></button>
           <div class="mi-row">
+          <button type="button" class="mi small" data-go="friends"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M17 8v6M14 11h6"/></svg><i class="badge" id="friendsBadge" hidden></i></span><span class="mi-t"><b data-t="friends"></b></span></button>
           <button type="button" class="mi small" data-go="profile"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span class="mi-t"><b data-t="avatar"></b></span></button>
           <button type="button" class="mi small" data-go="rules"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7h6M9 10.5h6"/></svg></span><span class="mi-t"><b data-t="rulebook"></b></span></button>
           <button type="button" class="mi small" data-go="settings"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></span><span class="mi-t"><b data-t="settings"></b></span></button>
@@ -81,9 +84,17 @@
         <h2 class="l-h" data-t="faqH"></h2>
         <div class="lfaqs"><details class="lfaq"><summary data-t="faq1Q"></summary><p data-t="faq1A"></p></details><details class="lfaq"><summary data-t="faq2Q"></summary><p data-t="faq2A"></p></details><details class="lfaq"><summary data-t="faq3Q"></summary><p data-t="faq3A"></p></details><details class="lfaq"><summary data-t="faq4Q"></summary><p data-t="faq4A"></p></details><details class="lfaq"><summary data-t="faq5Q"></summary><p data-t="faq5A"></p></details></div>
       </section>
+      <section class="lsec lsupport" id="land-support">
+        <p class="l-eyebrow" data-t="supportEyebrow"></p>
+        <h2 class="l-h" data-t="supportH"></h2>
+        <p class="l-lead" data-t="supportLead"></p>
+        <div class="lcta-btns"><a class="btn big gold" id="supMail" href="mailto:aayushpandey.pro@gmail.com" data-t="supportMail"></a><button type="button" class="btn big ghost" id="supCopy" data-t="supportCopy"></button></div>
+        <p class="sup-addr">aayushpandey.pro@gmail.com</p>
+        <div class="lfeats sup-notes"><div class="lfeat"><h3 data-t="sup1T"></h3><p data-t="sup1X"></p></div><div class="lfeat"><h3 data-t="sup2T"></h3><p data-t="sup2X"></p></div><div class="lfeat"><h3 data-t="sup3T"></h3><p data-t="sup3X"></p></div><div class="lfeat"><h3 data-t="sup4T"></h3><p data-t="sup4X"></p></div></div>
+      </section>
       <footer class="land-foot">
         <div class="lf-brand"><span class="logo-s">King of Diamonds</span><p data-t="footNote"></p></div>
-        <nav class="lf-links"><a href="about.html" data-t="about"></a><a href="privacy.html" data-t="privacy"></a><a href="terms.html" data-t="terms"></a><a href="mailto:hello@example.com" id="footMail" data-t="contact"></a></nav>
+        <nav class="lf-links"><a href="about.html" data-t="about"></a><a href="privacy.html" data-t="privacy"></a><a href="terms.html" data-t="terms"></a><a href="support.html" data-t="supportTitle"></a><a href="mailto:aayushpandey.pro@gmail.com" id="footMail" data-t="contact"></a></nav>
         <p class="lf-copy">© 2026 King of Diamonds</p>
       </footer>
     </div>
@@ -133,6 +144,7 @@
       <div class="prof">
         <div class="prof-preview">
           <div class="stagebox"><div class="bust-big" id="profBust"></div></div>
+          <p class="gate-note" id="profGate" hidden><b data-t="nameNeeded"></b><span data-t="nameNeededSub"></span></p>
           <label class="lbl" for="profName" data-t="name"></label>
           <input id="profName" class="txt" maxlength="14" autocomplete="off" spellcheck="false">
           <div class="btns"><button type="button" class="btn ghost" id="profRand" data-t="randomize"></button><button type="button" class="btn gold" id="profSave" data-t="save"></button></div>
@@ -167,6 +179,34 @@
     </div>
   </section>
 
+  <!-- ============ FRIENDS ============ -->
+  <section class="screen" id="scr-friends">
+    <div class="page">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="friendsTitle"></h2></header>
+      <div id="fMain">
+        <div class="card f-me">
+          <span class="lbl" data-t="yourCode"></span>
+          <div class="bigcode sm" id="fCode">-------</div>
+          <div class="btns"><button type="button" class="btn ghost" id="fCopyCode" data-t="fCopyCode"></button><button type="button" class="btn ghost" id="fCopyLink" data-t="fCopyLink"></button></div>
+          <p class="note" data-t="friendHint"></p>
+        </div>
+        <form id="fAdd" class="f-add" novalidate>
+          <input id="fAddIn" class="code-in" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" data-ph="friendCodePh">
+          <button type="submit" class="btn gold" data-t="addFriend"></button>
+        </form>
+        <p class="note f-msg" id="fMsg" role="status" hidden></p>
+        <div id="fReqs"></div>
+        <h3 class="eyebrow" data-t="friendsList"></h3>
+        <div id="fList"></div>
+      </div>
+      <div id="fDm" class="f-dm" hidden>
+        <div class="dm-head"><span class="q-av" id="dmAv"></span><b id="dmName"></b><small id="dmSt"></small></div>
+        <div class="dm-log" id="dmLog" aria-live="polite"></div>
+        <form id="dmForm" class="chat-form" autocomplete="off"><input id="dmIn" class="txt" maxlength="300" data-ph="dmPh"><button type="submit" class="btn gold" data-t="send"></button></form>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ JOIN ============ -->
   <section class="screen" id="scr-join">
     <div class="page narrow">
@@ -191,6 +231,7 @@
       <p class="note" data-t="inviteHint"></p>
       <div class="seats" id="lobbySeats"></div>
       <div class="opts" id="lobbyOpts"></div>
+      <p class="note" id="lobbyNote"></p>
       <p class="note warn" id="lobbyErr" hidden></p>
       <button type="button" class="btn big gold wide" id="lobbyStart" data-t="startGame"></button>
       <p class="waithost" id="lobbyWait" hidden><span class="dots"></span> <span data-t="waitHost"></span></p>
@@ -292,8 +333,9 @@
 <canvas id="fx" aria-hidden="true"></canvas>
 <div class="flash" id="flash" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status" hidden></div>
+<div class="net-banner" id="netBanner" role="status" hidden></div>
 <div class="sr" id="live" aria-live="polite"></div>
-<div id="remoteAudio" hidden></div>
+<div id="remoteAudio" aria-hidden="true"></div>
 
 <script src="config.js"></script>
 <script src="vendor/socket.io.min.js"></script>
@@ -309,6 +351,7 @@
 <script src="js/scene.js"></script>
 <script src="js/net.js"></script>
 <script src="js/voicechat.js"></script>
+<script src="js/social.js"></script>
 <script src="js/announcer.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>

@@ -18,5 +18,8 @@
     document.getElementById('joinCode').value = m[1].toUpperCase();
     if (K.Net.available()) K.UI.joinRoom(m[1]);
   }
+  const f = /[?&]friend=([A-Za-z0-9]{7})/.exec(location.search);
+  if (f && K.Net.available()) K.Social.fromLink(f[1]);
+  else if (!m) K.UI.restore();
   if (K.FAST) window.__KOD = K;
 })();
