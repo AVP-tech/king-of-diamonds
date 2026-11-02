@@ -1,0 +1,20 @@
+{
+  "name": "king-of-diamonds",
+  "version": "1.0.0",
+  "description": "King of Diamonds: a 3D survival number game for 5 to 8 players. Pick 0 to 100, closest to 80% of the average survives.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "build": "node scripts/write-config.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

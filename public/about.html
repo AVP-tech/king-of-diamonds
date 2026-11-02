@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About · King of Diamonds</title>
+<meta name="description" content="About King of Diamonds, a free online survival number game for 5 to 8 players.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 L28 16 L16 30 L4 16Z' fill='%23E8344E'/%3E%3Cpath d='M16 9 L22 16 L16 23 L10 16Z' fill='%23FFC54A'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<style>
+:root { color-scheme: dark; --bg: #07090D; --ink: #EEF1F6; --muted: #9AA3B5; --line: #242C3B; --red: #E8344E; --gold: #FFC54A; }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(ellipse at 50% -10%, #2a120c, var(--bg) 55%) fixed; color: var(--ink); font: 16px/1.65 'Hanken Grotesk', system-ui, sans-serif; }
+main { width: min(100% - 32px, 760px); margin: 0 auto; padding: 28px 0 60px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 44px; }
+.brand { font: 900 16px 'Cinzel', serif; letter-spacing: .1em; color: var(--ink); text-decoration: none; }
+.brand::before { content: "\2666"; color: var(--red); margin-right: 8px; }
+.play { padding: 10px 18px; border-radius: 12px; background: var(--gold); color: #2A1A00; font-weight: 700; text-decoration: none; }
+h1 { font: 900 clamp(32px, 6vw, 52px)/1.1 'Cinzel', serif; margin: 0 0 8px; }
+.upd { color: var(--muted); margin: 0 0 30px; font-size: 14px; }
+h2 { font-size: 20px; margin: 34px 0 8px; color: var(--gold); }
+p, li { color: #C6CEDC; } a { color: var(--gold); }
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; }
+footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a class="brand" href="./">King of Diamonds</a><a class="play" href="./">Play now</a></div>
+<h1>About the game</h1>
+<p class="upd">A round table, one number each, and one survivor.</p>
+<p>King of Diamonds is a free browser game for 5 to 8 players. Every round, each player secretly picks a whole number from 0 to 100. The average of all picks is multiplied by 0.8, and the player closest to that target wins the round. Everyone else loses a diamond. Lose all your diamonds and you are out. Every time a player is eliminated, a new rule enters the game.</p>
+<h2>Ways to play</h2>
+<ul>
+<li><b>Quick match</b> seats you with real players online. If the table is slow to fill, you can start with bots in the empty seats.</li>
+<li><b>Play vs bots</b> is offline practice against computer players with different styles.</li>
+<li><b>Rooms</b> let you invite friends with a 5-letter code, talk over voice chat and play together.</li>
+</ul>
+<h2>Where the idea comes from</h2>
+<p>The game is inspired by the King of Diamonds number game from fiction. The characters, art, voice lines and the extra rules for bigger tables are original to this game. It is a fan-inspired project and is not affiliated with, endorsed by or connected to any series, publisher or studio.</p>
+<h2 id="contact">Contact</h2>
+<p>Questions, bug reports or feedback: <a href="mailto:hello@example.com" id="mail">hello@example.com</a>.</p>
+<footer><a href="./">Play</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></footer>
+</main>
+</body>
+</html>

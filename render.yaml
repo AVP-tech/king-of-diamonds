@@ -1,0 +1,12 @@
+# Render blueprint for the multiplayer game server (Quick match, rooms, voice chat signalling).
+services:
+  - type: web
+    name: king-of-diamonds
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

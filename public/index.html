@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>King of Diamonds · Free online survival number game</title>
+<meta name="description" content="Pick a number from 0 to 100. Closest to 80% of the average survives. A free 3D multiplayer game for 5 to 8 players with voice chat, a live announcer and rules that change as players fall.">
+<meta property="og:title" content="King of Diamonds">
+<meta property="og:description" content="One round table. One number each. Closest to 80% of the average survives. Free, in your browser.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#07090D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 L28 16 L16 30 L4 16Z' fill='%23E8344E'/%3E%3Cpath d='M16 9 L22 16 L16 23 L10 16Z' fill='%23FFC54A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Hanken+Grotesk:wght@400;500;600;700&family=Hind:wght@400;500;600;700&family=Martian+Mono:wght@400;600;700&family=Unbounded:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<main id="app">
+
+  <!-- ============ LANDING + MAIN MENU ============ -->
+  <section class="screen" id="scr-menu" aria-labelledby="logoTitle">
+    <div class="land-hero" id="landHero">
+      <div class="land-shade" aria-hidden="true"></div>
+      <header class="topline">
+      <button type="button" class="me-chip" id="meChip"><span class="me-av" id="meAv"></span><span class="me-txt"><b id="meName"></b><small data-t="edit"></small></span></button>
+      <div class="tools">
+        <button type="button" class="ib lang" id="mLang" aria-label="Language">EN</button>
+        <button type="button" class="ib" id="mMusic" aria-pressed="true" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path class="off-only" d="M3 3l18 18"/></svg></button>
+      </div>
+      </header>
+      <div class="menu-grid">
+        <div class="hero">
+          <span class="live-pill" id="heroLive"><i></i><span data-t="liveTable"></span></span>
+          <h1 class="logo" id="logoTitle"><span class="l1">King</span><span class="l2">of</span><span class="l3">Diamonds</span></h1>
+          <p class="tagline" data-t="tagline"></p>
+          <ul class="hero-facts"><li><b>0–100</b><span data-t="factPick"></span></li><li><b>×0.8</b><span data-t="factTarget"></span></li><li><b>1</b><span data-t="factLast"></span></li></ul>
+        </div>
+        <nav class="menu-list" aria-label="Main menu">
+          <button type="button" class="mi primary" data-go="quick"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.3c3.2-.6 6 1.6 6 5.2"/></svg></span><span class="mi-t"><b data-t="quickMatch"></b><small data-t="quickMatchSub"></small></span><span class="mi-live" id="miLive" hidden></span></button>
+          <button type="button" class="mi" data-go="solo"><span class="mi-ic"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15h5"/></svg></span><span class="mi-t"><b data-t="playSolo"></b><small data-t="playSoloSub"></small></span></button>
+          <button type="button" class="mi" data-go="create"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="mi-t"><b data-t="createRoom"></b><small data-t="createRoomSub"></small></span></button>
+          <button type="button" class="mi" data-go="join"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M14 4h5v16h-5M10 8l4 4-4 4M14 12H4"/></svg></span><span class="mi-t"><b data-t="joinRoom"></b><small data-t="joinRoomSub"></small></span></button>
+          <div class="mi-row">
+          <button type="button" class="mi small" data-go="profile"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span class="mi-t"><b data-t="avatar"></b></span></button>
+          <button type="button" class="mi small" data-go="rules"><span class="mi-ic"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7h6M9 10.5h6"/></svg></span><span class="mi-t"><b data-t="rulebook"></b></span></button>
+          <button type="button" class="mi small" data-go="settings"><span class="mi-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></span><span class="mi-t"><b data-t="settings"></b></span></button>
+          </div>
+        </nav>
+      </div>
+      <a class="scroll-cue" href="#land-how"><span data-t="scrollCue"></span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>
+    </div>
+
+    <div class="land-body">
+      <section class="lsec" id="land-how">
+        <p class="l-eyebrow" data-t="howEyebrow"></p>
+        <h2 class="l-h" data-t="howH"></h2>
+        <ol class="lsteps"><li class="lstep"><div class="lstep-art"><svg viewBox="0 0 160 110"><rect x="30" y="8" width="100" height="94" rx="14" fill="#121722" stroke="#2E384B" stroke-width="2"/><rect x="42" y="20" width="76" height="26" rx="6" fill="#0B1420" stroke="#FFC54A" stroke-opacity=".5"/><text x="80" y="40" text-anchor="middle" font-family="Martian Mono, monospace" font-weight="700" font-size="18" fill="#FFE8B0">37</text><g fill="#1E2533"><rect x="44" y="54" width="18" height="13" rx="3"/><rect x="69" y="54" width="18" height="13" rx="3"/><rect x="94" y="54" width="18" height="13" rx="3"/><rect x="44" y="71" width="18" height="13" rx="3"/><rect x="69" y="71" width="18" height="13" rx="3"/><rect x="94" y="71" width="18" height="13" rx="3"/></g><rect x="94" y="71" width="18" height="13" rx="3" fill="#E8344E"/></svg></div><span class="lstep-n">01</span><h3 data-t="step1T"></h3><p data-t="step1X"></p></li><li class="lstep"><div class="lstep-art"><svg viewBox="0 0 160 110"><line x1="14" y1="70" x2="146" y2="70" stroke="#2E384B" stroke-width="2"/><g font-family="Martian Mono, monospace" font-size="9" fill="#8E98AC"><text x="12" y="86">0</text><text x="136" y="86">100</text></g><g fill="#7FA8FF"><circle cx="40" cy="60" r="6"/><circle cx="58" cy="52" r="6"/><circle cx="66" cy="62" r="6"/><circle cx="92" cy="56" r="6"/><circle cx="118" cy="62" r="6"/></g><line x1="76" y1="24" x2="76" y2="78" stroke="#8E98AC" stroke-dasharray="3 3"/><line x1="61" y1="18" x2="61" y2="78" stroke="#FFC54A" stroke-width="2.5"/><text x="61" y="13" text-anchor="middle" font-family="Martian Mono, monospace" font-weight="700" font-size="11" fill="#FFC54A">×0.8</text></svg></div><span class="lstep-n">02</span><h3 data-t="step2T"></h3><p data-t="step2X"></p></li><li class="lstep"><div class="lstep-art"><svg viewBox="0 0 160 110"><path d="M80 14 L112 52 L80 90 L48 52Z" fill="#E8344E"/><path d="M80 32 L96 52 L80 72 L64 52Z" fill="#FFC54A"/><g stroke="#FF2A3D" stroke-width="2"><line x1="22" y1="12" x2="56" y2="44"/></g><rect x="10" y="4" width="18" height="12" rx="2" fill="#2A2F3A"/><circle cx="58" cy="46" r="3" fill="#FF2A3D"/><g fill="#3EE08F" font-family="Martian Mono, monospace" font-weight="700" font-size="10"><text x="80" y="104" text-anchor="middle">LAST ONE STANDING</text></g></svg></div><span class="lstep-n">03</span><h3 data-t="step3T"></h3><p data-t="step3X"></p></li></ol>
+      </section>
+      <section class="lsec">
+        <p class="l-eyebrow" data-t="rulesEyebrow"></p>
+        <h2 class="l-h" data-t="rulesH"></h2>
+        <p class="l-lead" data-t="rulesLead"></p>
+        <div class="lrules" id="landRules"></div>
+      </section>
+      <section class="lsec">
+        <p class="l-eyebrow" data-t="featEyebrow"></p>
+        <h2 class="l-h" data-t="featH"></h2>
+        <div class="lfeats"><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span><h3 data-t="f3dT"></h3><p data-t="f3dX"></p></div><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><h3 data-t="fvoiceT"></h3><p data-t="fvoiceX"></p></div><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/></svg></span><h3 data-t="fhostT"></h3><p data-t="fhostX"></p></div><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7h6M9 10.5h6"/></svg></span><h3 data-t="frulesT"></h3><p data-t="frulesX"></p></div><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><h3 data-t="favatarT"></h3><p data-t="favatarX"></p></div><div class="lfeat"><span class="lfeat-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span><h3 data-t="fexecT"></h3><p data-t="fexecX"></p></div></div>
+      </section>
+      <section class="lsec lcta">
+        <h2 class="l-h" data-t="ctaH"></h2>
+        <p class="l-lead" data-t="ctaX"></p>
+        <div class="lcta-btns"><button type="button" class="btn big gold" data-land="quick" data-t="quickMatch"></button><button type="button" class="btn big ghost" data-land="solo" data-t="playSolo"></button></div>
+      </section>
+      <section class="lsec">
+        <p class="l-eyebrow" data-t="faqEyebrow"></p>
+        <h2 class="l-h" data-t="faqH"></h2>
+        <div class="lfaqs"><details class="lfaq"><summary data-t="faq1Q"></summary><p data-t="faq1A"></p></details><details class="lfaq"><summary data-t="faq2Q"></summary><p data-t="faq2A"></p></details><details class="lfaq"><summary data-t="faq3Q"></summary><p data-t="faq3A"></p></details><details class="lfaq"><summary data-t="faq4Q"></summary><p data-t="faq4A"></p></details><details class="lfaq"><summary data-t="faq5Q"></summary><p data-t="faq5A"></p></details></div>
+      </section>
+      <footer class="land-foot">
+        <div class="lf-brand"><span class="logo-s">King of Diamonds</span><p data-t="footNote"></p></div>
+        <nav class="lf-links"><a href="about.html" data-t="about"></a><a href="privacy.html" data-t="privacy"></a><a href="terms.html" data-t="terms"></a><a href="mailto:hello@example.com" id="footMail" data-t="contact"></a></nav>
+        <p class="lf-copy">© 2026 King of Diamonds</p>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============ QUICK MATCH QUEUE ============ -->
+  <section class="screen" id="scr-queue">
+    <div class="page q-page">
+      <header class="page-head"><button type="button" class="back" id="qBack"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="qCancel"></span></button><h2 data-t="qTitle"></h2></header>
+      <div class="q-radar" aria-hidden="true">
+        <div class="q-ring r1"></div><div class="q-ring r2"></div><div class="q-ring r3"></div><div class="q-sweep"></div>
+        <div class="q-table"><span>&#9830;</span></div>
+        <div class="q-seats" id="qSeats"></div>
+      </div>
+      <p class="q-count" id="qCount" aria-live="polite"></p>
+      <p class="q-sub"><span id="qTime">0:00</span><span class="q-dot">·</span><span id="qOnline"></span></p>
+      <p class="lead q-lead" data-t="qLead"></p>
+      <div class="q-offer" id="qOffer" hidden>
+        <p data-t="qBotsOffer"></p>
+        <div class="q-actions"><button type="button" class="btn gold" id="qBots" data-t="qBots"></button><button type="button" class="btn ghost" id="qKeep" data-t="qKeep"></button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SOLO SETUP ============ -->
+  <section class="screen" id="scr-solo">
+    <div class="page">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="soloTitle"></h2></header>
+      <p class="lead" data-t="soloLead"></p>
+      <h3 class="eyebrow" data-t="opponents"></h3>
+      <div class="rivals" id="soloRivals"></div>
+      <div class="opts">
+        <div class="opt"><span class="lbl" data-t="tableSize"></span><div class="seg" id="segSize"></div></div>
+        <p class="note" id="sizeNote" data-t="sizeNote" hidden></p>
+        <div class="opt"><span class="lbl" data-t="difficulty"></span><div class="seg" id="segDiff"></div></div>
+        <div class="opt"><span class="lbl" data-t="length"></span><div class="seg" id="segLen"></div></div>
+        <div class="opt"><span class="lbl" data-t="timer"></span><div class="seg" id="segTime"></div></div>
+      </div>
+      <button type="button" class="btn big gold wide" id="soloStart" data-t="startMatch"></button>
+    </div>
+  </section>
+
+  <!-- ============ AVATAR ============ -->
+  <section class="screen" id="scr-profile">
+    <div class="page wide">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="profileTitle"></h2></header>
+      <div class="prof">
+        <div class="prof-preview">
+          <div class="stagebox"><div class="bust-big" id="profBust"></div></div>
+          <label class="lbl" for="profName" data-t="name"></label>
+          <input id="profName" class="txt" maxlength="14" autocomplete="off" spellcheck="false">
+          <div class="btns"><button type="button" class="btn ghost" id="profRand" data-t="randomize"></button><button type="button" class="btn gold" id="profSave" data-t="save"></button></div>
+        </div>
+        <div class="prof-edit">
+          <div class="tabs" role="tablist"><button type="button" role="tab" id="tabPresets" aria-selected="true" data-t="presets"></button><button type="button" role="tab" id="tabCustom" aria-selected="false" data-t="customize"></button></div>
+          <div class="preset-grid" id="presetGrid"></div>
+          <div class="custom" id="customPanel" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RULEBOOK ============ -->
+  <section class="screen" id="scr-rules">
+    <div class="page">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="rulesTitle"></h2>
+        <div class="head-tools"><div class="seg sm" id="rbLang"><button type="button" data-v="en">EN</button><button type="button" data-v="hi">हिं</button></div><button type="button" class="btn sm" id="rbAll" data-t="readAll"></button></div></header>
+      <p class="note" id="rbNote" hidden></p>
+      <div id="rbBody"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="screen" id="scr-settings">
+    <div class="page">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="settingsTitle"></h2></header>
+      <div class="opts" id="setRows"></div>
+      <p class="note" data-t="voiceNote"></p>
+      <p class="note warn" id="setNote" hidden></p>
+      <button type="button" class="btn ghost" id="setTest" data-t="testVoice"></button>
+    </div>
+  </section>
+
+  <!-- ============ JOIN ============ -->
+  <section class="screen" id="scr-join">
+    <div class="page narrow">
+      <header class="page-head"><button type="button" class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back"></span></button><h2 data-t="joinTitle"></h2></header>
+      <form id="joinForm" class="joinbox" novalidate>
+        <label class="lbl" for="joinCode" data-t="codeLabel"></label>
+        <input id="joinCode" class="code-in" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+        <button type="submit" class="btn big gold wide" data-t="join"></button>
+        <p class="note warn" id="joinErr" role="alert" hidden></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ LOBBY ============ -->
+  <section class="screen" id="scr-lobby">
+    <div class="page wide">
+      <header class="page-head"><button type="button" class="back" id="lobbyLeave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="leave"></span></button><h2 data-t="lobbyTitle"></h2></header>
+      <div class="codebar">
+        <div><span class="lbl" data-t="codeLabel"></span><div class="bigcode" id="lobbyCode">-----</div></div>
+        <div class="btns"><button type="button" class="btn ghost mic-btn" id="lobbyMic" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="lobbyMicT"></span></button><button type="button" class="btn ghost" id="copyCode" data-t="copyCode"></button><button type="button" class="btn ghost" id="copyLink" data-t="copyLink"></button></div>
+      </div>
+      <p class="note" data-t="inviteHint"></p>
+      <div class="seats" id="lobbySeats"></div>
+      <div class="opts" id="lobbyOpts"></div>
+      <p class="note warn" id="lobbyErr" hidden></p>
+      <button type="button" class="btn big gold wide" id="lobbyStart" data-t="startGame"></button>
+      <p class="waithost" id="lobbyWait" hidden><span class="dots"></span> <span data-t="waitHost"></span></p>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section class="screen game" id="scr-game">
+    <canvas id="g3d" aria-label="The card room: players seated around the round table"></canvas>
+    <div id="hud"></div>
+    <div class="cine-bars" aria-hidden="true"><i class="cb top"></i><i class="cb bot"></i></div>
+    <div class="cine-title" id="cineTitle" aria-live="assertive"><small id="cineName"></small><b data-t="eliminated">ELIMINATED</b><em data-t="tapSkip">Tap to skip</em></div>
+    <div class="look-hint" id="lookHint" aria-hidden="true"><svg viewBox="0 0 48 24"><path d="M6 12h36M6 12l6-6M6 12l6 6M42 12l-6-6M42 12l-6 6"/></svg><span id="lookHintT"></span></div>
+    <header class="gbar">
+      <div class="brand"><span class="logo-s">King of Diamonds</span></div>
+      <div class="tools">
+        <button type="button" class="ib center" id="gCenter" aria-label="Look ahead" title="Look ahead"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+        <button type="button" class="ib mic" id="gMic" aria-pressed="false" aria-label="Microphone" hidden><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path class="off-only" d="M4 4l16 16"/></svg></button>
+        <button type="button" class="ib" id="gRules" aria-label="Rulebook"><svg viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7h6M9 10.5h6"/></svg></button>
+        <button type="button" class="ib" id="gVoice" aria-pressed="true" aria-label="Host voice"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><path class="on-only" d="M17 6.5a4 4 0 0 1 0 6M19.6 4a8 8 0 0 1 0 11"/><path class="off-only" d="M16 6l6 6M22 6l-6 6"/></svg></button>
+        <button type="button" class="ib" id="gSfx" aria-pressed="true" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on-only" d="M15.5 9a4.5 4.5 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/><path class="off-only" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+        <button type="button" class="ib" id="gMenu" aria-label="Pause menu"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></button>
+      </div>
+    </header>
+    <div class="mon-wrap">
+      <div class="monitor" id="mon">
+        <div class="m-head"><span id="mRound">—</span><span id="mAlive"></span><span class="lamps" id="lamps"></span></div>
+        <div class="m-stage" id="mStage"></div>
+        <button type="button" class="m-cap" id="cap" aria-label="Host caption, tap to skip">
+          <svg class="arb-mini" viewBox="0 0 120 120" aria-hidden="true"><path d="M60 6 L110 60 L60 114 L10 60 Z" fill="#160A0E" stroke="#FFC54A" stroke-width="5"/><rect x="32" y="48" width="20" height="8" rx="4" fill="#FFC54A"/><rect x="68" y="48" width="20" height="8" rx="4" fill="#FFC54A"/><rect class="arb-mouth" x="44" y="74" width="32" height="6" rx="3" fill="#FFC54A"/></svg>
+          <span class="cap-t" id="capT"></span>
+        </button>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tz" id="tz">
+      <div class="pad-wrap" id="padWrap">
+        <svg class="hand hb l" viewBox="0 0 120 220" aria-hidden="true"><path d="M-30 230 L14 128 Q28 100 58 106 L90 122 L74 230 Z" style="fill:var(--sleeve)"/><path d="M16 126 Q30 98 60 104 L90 120 L86 136 L58 122 Q34 116 22 140 Z" style="fill:var(--cuff)"/><path d="M50 116 Q42 76 70 60 L96 52 L96 134 Q74 142 56 132 Z" style="fill:var(--hand)"/></svg>
+        <svg class="hand hb r" viewBox="0 0 120 220" aria-hidden="true"><path d="M-30 230 L14 128 Q28 100 58 106 L90 122 L74 230 Z" style="fill:var(--sleeve)"/><path d="M16 126 Q30 98 60 104 L90 120 L86 136 L58 122 Q34 116 22 140 Z" style="fill:var(--cuff)"/><path d="M50 116 Q42 76 70 60 L96 52 L96 134 Q74 142 56 132 Z" style="fill:var(--hand)"/></svg>
+        <div class="pad"><div class="pad-screen" id="padScreen"></div></div>
+        <svg class="hand ht l" viewBox="0 0 120 220" aria-hidden="true"><path d="M60 98 Q64 70 86 54 Q98 46 106 54 Q112 62 104 70 Q92 82 88 102 Q76 112 60 98Z" style="fill:var(--hand)"/><ellipse cx="101" cy="58" rx="5.5" ry="4.2" fill="rgba(255,255,255,.35)" transform="rotate(-35 101 58)"/></svg>
+        <svg class="hand ht r" viewBox="0 0 120 220" aria-hidden="true"><path d="M60 98 Q64 70 86 54 Q98 46 106 54 Q112 62 104 70 Q92 82 88 102 Q76 112 60 98Z" style="fill:var(--hand)"/><ellipse cx="101" cy="58" rx="5.5" ry="4.2" fill="rgba(255,255,255,.35)" transform="rotate(-35 101 58)"/></svg>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ OVERLAYS ============ -->
+<div class="banner" id="banner" aria-hidden="true"></div>
+<div class="formula" id="formula" aria-hidden="true"></div>
+<div id="beams" aria-hidden="true"></div>
+<div id="sight" aria-hidden="true"></div>
+<svg id="glass" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true" hidden>
+  <g class="gl-blood"><circle cx="500" cy="470" r="60" fill="#8E0E1A"/><circle cx="560" cy="430" r="24" fill="#B3122A"/><circle cx="440" cy="520" r="18" fill="#8E0E1A"/><circle cx="620" cy="520" r="11" fill="#B3122A"/><circle cx="380" cy="420" r="9" fill="#8E0E1A"/><path d="M470 520 L466 700 M520 525 L524 640 M545 500 L548 780" stroke="#8E0E1A" stroke-width="10" stroke-linecap="round"/></g>
+  <g fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2.2">
+    <circle cx="500" cy="470" r="16"/>
+    <path d="M500 470 L180 0 M500 470 L640 0 M500 470 L1000 260 M500 470 L1000 760 M500 470 L760 1000 M500 470 L300 1000 M500 470 L0 820 M500 470 L0 300 M500 470 L420 0"/>
+    <path d="M380 290 L420 350 L470 330 M600 300 L640 380 M660 470 L760 520 L800 450 M610 640 L540 700 L600 760 M380 640 L330 560 L260 600 M330 430 L250 380" stroke-width="1.4"/>
+  </g>
+</svg>
+
+<div class="ov" id="ovPause" hidden>
+  <div class="card pause-card" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+    <h2 id="pauseTitle" data-t="paused"></h2>
+    <p class="note" id="pauseNote" hidden data-t="onlineNoPause"></p>
+    <div class="stack">
+      <button type="button" class="btn big gold" id="pResume" data-t="resume"></button>
+      <button type="button" class="btn ghost" id="pRules" data-t="rulebook"></button>
+      <button type="button" class="btn ghost" id="pSettings" data-t="settings"></button>
+      <button type="button" class="btn ghost danger" id="pQuit" data-t="quit"></button>
+    </div>
+  </div>
+</div>
+
+<div class="ov rule-ov" id="ovRule" hidden>
+  <div class="rule-show">
+    <div class="rcard"><div class="rcard-in"><div class="rface rback"><span>&#9830;</span></div><div class="rface rfront"><small id="rcN"></small><b>&#9830;</b></div></div></div>
+    <div class="rtext">
+      <p class="rk" data-t="newRule"></p>
+      <h2 id="rcTitle"></h2>
+      <p id="rcText"></p>
+      <button type="button" class="btn gold" id="rcGo" data-t="continue"></button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovEnd" hidden>
+  <div class="card end-card" id="endCard">
+    <div class="end-hero" id="endHero"></div>
+    <p class="eyebrow" data-t="standings"></p>
+    <ol class="stand" id="endStand"></ol>
+    <div class="stats" id="endStats"></div>
+    <code class="share" id="endShare"></code>
+    <div class="btns center"><button type="button" class="btn big gold" id="endAgain"></button><button type="button" class="btn ghost" id="endCopy" data-t="copyResult"></button><button type="button" class="btn ghost" id="endMenu" data-t="mainMenu"></button></div>
+  </div>
+</div>
+
+<div class="wipe" id="wipe" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="flash" id="flash" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="sr" id="live" aria-live="polite"></div>
+<div id="remoteAudio" hidden></div>
+
+<script src="config.js"></script>
+<script src="vendor/socket.io.min.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="audio/voice/voice-manifest.js"></script>
+<script src="js/core/rules.js"></script>
+<script src="js/core/presets.js"></script>
+<script src="js/core/engine.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/avatar.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/net.js"></script>
+<script src="js/voicechat.js"></script>
+<script src="js/announcer.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
